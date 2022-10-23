@@ -101,7 +101,7 @@ class ViewSetRecipe(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
     ordering_fields = ('-pub_date',)
 
-    def get_serializer_class(self):  # noqa
+    def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
             return SerializerRecipe
         elif self.request.method == 'GET':
