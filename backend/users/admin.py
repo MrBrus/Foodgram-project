@@ -32,4 +32,3 @@ class FollowAdmin(admin.ModelAdmin):
         'author__username',
     )
     empty_value_display = EMPTY_VALUE
-
