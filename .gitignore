@@ -28,6 +28,8 @@ share/python-wheels/
 .idea
 media/
 MANIFEST
+frontend/build/
+frontend/node_modules/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
