@@ -3,7 +3,6 @@ from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
 from users.serializers import SerializerCustomUser
-
 from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
                      ShoppingCart, Tag)
 
