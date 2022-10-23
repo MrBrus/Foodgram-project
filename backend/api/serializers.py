@@ -49,5 +49,4 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         return False
 
     def get_recipes_count(self, author):
-        recipes_count = author.recipes.count()
-        return recipes_count
+        return author.recipes.count()

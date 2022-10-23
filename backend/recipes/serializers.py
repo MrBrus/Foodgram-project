@@ -77,12 +77,10 @@ class SerializerIngredientCreateInRecipe(serializers.Serializer):
         return value
 
     def get_measurement_unit(self, ingredient):
-        measurement_unit = ingredient.ingredient.measurement_unit
-        return measurement_unit
+        return ingredient.ingredient.measurement_unit
 
     def get_name(self, ingredient):
-        name = ingredient.ingredient.name
-        return name
+        return ingredient.ingredient.name
 
 
 class SerializerIngredientInRecipeLite(serializers.Serializer):

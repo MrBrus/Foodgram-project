@@ -13,9 +13,7 @@ class ListSubscriptions(viewsets.ModelViewSet):
     pagination_class = LimitPagination
 
     def get_queryset(self):
-        user = self.request.user
-        queryset = User.objects.filter(followed__follower=user)
-        return queryset
+        return User.objects.filter(followed__follower=self.request.user)
 
 
 class Subscribe(APIView):
