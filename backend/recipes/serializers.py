@@ -2,13 +2,13 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
-from users.serializers import SerializerCustomUser
+from users.serializers import CustomUserSerializer
 from .models import (
     Favorite, Ingredient, IngredientInRecipe, Recipe, ShoppingCart, Tag,
 )
 
 
-class SerializerTag(serializers.ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = (
@@ -19,7 +19,7 @@ class SerializerTag(serializers.ModelSerializer):
         )
 
 
-class SerializerIngredient(serializers.ModelSerializer):
+class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = (
@@ -29,7 +29,7 @@ class SerializerIngredient(serializers.ModelSerializer):
         )
 
 
-class SerializerIngredientInRecipe(serializers.ModelSerializer):
+class IngredientInRecipeSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(
         source='ingredient.id'
     )
@@ -50,7 +50,7 @@ class SerializerIngredientInRecipe(serializers.ModelSerializer):
         )
 
 
-class SerializerIngredientCreateInRecipe(serializers.Serializer):
+class IngredientCreateInRecipeSerializer(serializers.Serializer):
     min_ingredient_amount = 1
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
@@ -72,7 +72,7 @@ class SerializerIngredientCreateInRecipe(serializers.Serializer):
         )
 
     def validate_unit(self, value):
-        if value < SerializerIngredientCreateInRecipe.min_ingredient_amount:
+        if value < IngredientCreateInRecipeSerializer.min_ingredient_amount:
             raise serializers.ValidationError(
                 'Check that the ingredients units is more than one'
             )
@@ -85,7 +85,7 @@ class SerializerIngredientCreateInRecipe(serializers.Serializer):
         return ingredient.ingredient.name
 
 
-class SerializerIngredientInRecipeLite(serializers.Serializer):
+class IngredientInRecipeLiteSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     amount = serializers.IntegerField()
 
@@ -97,15 +97,15 @@ class SerializerIngredientInRecipeLite(serializers.Serializer):
         )
 
 
-class SerializerRecipeView(serializers.ModelSerializer):
-    tags = SerializerTag(
+class RecipeViewSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(
         many=True,
         read_only=True
     )
-    author = SerializerCustomUser(
+    author = CustomUserSerializer(
         read_only=True
     )
-    ingredients = SerializerIngredientInRecipe(
+    ingredients = IngredientInRecipeSerializer(
         many=True
     )
     is_favorited = serializers.SerializerMethodField()
@@ -147,7 +147,7 @@ class SerializerRecipeView(serializers.ModelSerializer):
         return False
 
 
-class SerializerRecipe(serializers.ModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField(
         required=False
     )
@@ -155,10 +155,10 @@ class SerializerRecipe(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         many=True
     )
-    author = SerializerCustomUser(
+    author = CustomUserSerializer(
         read_only=True
     )
-    ingredients = SerializerIngredientInRecipeLite(
+    ingredients = IngredientInRecipeLiteSerializer(
         many=True,
     )
     is_favorited = serializers.SerializerMethodField()
@@ -229,14 +229,14 @@ class SerializerRecipe(serializers.ModelSerializer):
         return super().update(recipe, validated_data)
 
     def to_representation(self, recipe):
-        serializer = SerializerRecipeView(
+        serializer = RecipeViewSerializer(
             recipe,
             context=self.context
         )
         return serializer.data
 
 
-class SerializerFollowRecipes(serializers.ModelSerializer):
+class FollowRecipesSerializer(serializers.ModelSerializer):
     recipes = serializers.SerializerMethodField()
 
     def get_recipes(self, obj):
@@ -244,13 +244,13 @@ class SerializerFollowRecipes(serializers.ModelSerializer):
         recipes = obj.recipes.all()
         if limit:
             recipes = obj.recipes.all()[:int(limit)]
-        return SerializerRecipeView(
+        return RecipeViewSerializer(
             recipes,
             many=True
         ).data
 
 
-class SerializerFavorite(serializers.ModelSerializer):
+class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
@@ -261,7 +261,7 @@ class SerializerFavorite(serializers.ModelSerializer):
         )
 
 
-class SerializerShoppingCart(serializers.ModelSerializer):
+class ShoppingCartSerializer(serializers.ModelSerializer):
     ingredient = serializers.SerializerMethodField()
 
     class Meta:
@@ -270,7 +270,7 @@ class SerializerShoppingCart(serializers.ModelSerializer):
 
     def get_ingredient(self, recipe):
         ingredient = recipe.ingredients.all()
-        return SerializerIngredient(
+        return IngredientSerializer(
             ingredient,
             many=True
         ).data

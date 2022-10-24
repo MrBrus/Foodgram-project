@@ -5,12 +5,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import User
-from .serializers import SerializerCustomUser, SerializerPassword
+from .serializers import CustomUserSerializer, PasswordSerializer
 
 
-class ViewSetCustomUser(UserViewSet):
+class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
-    serializer_class = SerializerCustomUser
+    serializer_class = CustomUserSerializer
 
     @action(
         detail=False,
@@ -19,7 +19,7 @@ class ViewSetCustomUser(UserViewSet):
     )
     def me(self, request):
         context = {'request': self.request}
-        serializer = SerializerCustomUser(
+        serializer = CustomUserSerializer(
             request.user,
             context=context
         )
@@ -32,7 +32,7 @@ class ViewSetCustomUser(UserViewSet):
         user = self.request.user
         if user.is_anonymous:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        serializer = SerializerPassword(
+        serializer = PasswordSerializer(
             data=request.data,
             context={'request': request}
         )

@@ -18,8 +18,8 @@ from .models import (
 )
 from .permissions import OwnerOrReadOnly
 from .serializers import (
-    SerializerFavorite, SerializerIngredient, SerializerRecipe,
-    SerializerRecipeView, SerializerTag
+    FavoriteSerializer, IngredientSerializer, RecipeSerializer,
+    RecipeViewSerializer, TagSerializer
 )
 
 
@@ -65,7 +65,7 @@ def post(request, id, model):
         user=user,
         recipe=recipe
     )
-    serializer = SerializerFavorite(
+    serializer = FavoriteSerializer(
         recipe,
         context={
             "request": request
@@ -77,17 +77,17 @@ def post(request, id, model):
     )
 
 
-class ViewSetTags(viewsets.ModelViewSet):
+class TagsViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
-    serializer_class = SerializerTag
+    serializer_class = TagSerializer
     permission_classes = (AllowAny,)
     pagination_class = None
     http_method_names = ['get']
 
 
-class ViewSetIngredient(viewsets.ModelViewSet):
+class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
-    serializer_class = SerializerIngredient
+    serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     filter = IngredientFilter
     search_fields = ('^name',)
@@ -95,24 +95,24 @@ class ViewSetIngredient(viewsets.ModelViewSet):
     http_method_names = ['get']
 
 
-class ViewSetRecipe(viewsets.ModelViewSet):
+class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = SerializerRecipeView
+    serializer_class = RecipeViewSerializer
     permission_classes = (OwnerOrReadOnly,)
     filterset_class = RecipeFilter
     ordering_fields = ('-pub_date',)
 
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
-            return SerializerRecipe
+            return RecipeSerializer
         elif self.request.method == 'GET':
-            return SerializerRecipeView
+            return RecipeViewSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
 
-class FavoriteView(APIView):
+class FavoriteViewSet(APIView):
     def delete(self, request, id):
         return delete(request, id, Favorite)
 
@@ -120,7 +120,7 @@ class FavoriteView(APIView):
         return post(request, id, Favorite)
 
 
-class ViewSetShoppingCart(APIView):
+class ShoppingCartViewSet(APIView):
     def delete(self, request, id):
         return delete(request, id, ShoppingCart)
 
@@ -132,7 +132,7 @@ class ViewSetShoppingCart(APIView):
         methods=['GET'],
         permission_classes=[IsAuthenticated],
     )
-    def get(self, request):
+    def create_pdf(self, request):
         font = 'arial'
         pdfmetrics.registerFont(
             TTFont(

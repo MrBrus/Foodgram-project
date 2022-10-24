@@ -1,34 +1,34 @@
-from api.views import ListSubscriptions, Subscribe
+from api.views import ListSubscriptionsViewSet, SubscribeViewSet
 from django.urls import include, path
-from recipes.views import (FavoriteView, ViewSetIngredient, ViewSetRecipe,
-                           ViewSetShoppingCart, ViewSetTags)
+from recipes.views import (FavoriteViewSet, IngredientViewSet, RecipeViewSet,
+                           ShoppingCartViewSet, TagsViewSet)
 from rest_framework.routers import DefaultRouter, SimpleRouter
-from users.views import ViewSetCustomUser
+from users.views import CustomUserViewSet
 
 app_name = 'api'
 router = SimpleRouter()
 router_2 = DefaultRouter()
-router.register(r'users', ViewSetCustomUser, basename='users')
-router.register(r'tags', ViewSetTags, basename='tags')
-router.register(r'ingredients', ViewSetIngredient, basename='ingredients')
-router.register(r'recipes', ViewSetRecipe, basename='recipes')
-router_2.register(r'', ListSubscriptions, basename='subscriptions')
+router.register(r'users', CustomUserViewSet, basename='users')
+router.register(r'tags', TagsViewSet, basename='tags')
+router.register(r'ingredients', IngredientViewSet, basename='ingredients')
+router.register(r'recipes', RecipeViewSet, basename='recipes')
+router_2.register(r'', ListSubscriptionsViewSet, basename='subscriptions')
 
 urlpatterns = [
 
     path(
         'recipes/<int:id>/favorite/',
-        FavoriteView.as_view(),
+        FavoriteViewSet.as_view(),
         name='favorite',
     ),
     path(
         'recipes/download_shopping_cart/',
-        ViewSetShoppingCart.as_view(),
+        ShoppingCartViewSet.as_view(),
         name='download_shopping_cart',
     ),
     path(
         'recipes/<int:id>/shopping_cart/',
-        ViewSetShoppingCart.as_view(),
+        ShoppingCartViewSet.as_view(),
         name='shopping_cart',
     ),
     path(
@@ -37,7 +37,7 @@ urlpatterns = [
     ),
     path(
         'users/<int:id>/subscribe/',
-        Subscribe.as_view(),
+        SubscribeViewSet.as_view(),
         name="subscribe"),
     path(
         'auth/',

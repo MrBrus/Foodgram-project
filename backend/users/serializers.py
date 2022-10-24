@@ -4,7 +4,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from .models import Follow, User
 
 
-class SerializerUserRegistration(UserCreateSerializer):
+class UserRegistrationSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = User
         fields = [
@@ -26,7 +26,7 @@ class SerializerUserRegistration(UserCreateSerializer):
         )]
 
 
-class SerializerCustomUser(UserSerializer):
+class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -51,7 +51,7 @@ class SerializerCustomUser(UserSerializer):
         return False
 
 
-class SerializerPassword(serializers.ModelSerializer):
+class PasswordSerializer(serializers.ModelSerializer):
     current_password = serializers.CharField(
         required=True,
     )

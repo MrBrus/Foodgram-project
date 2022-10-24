@@ -8,7 +8,7 @@ from .pagination import LimitPagination
 from .serializers import SubscriptionsSerializer
 
 
-class ListSubscriptions(viewsets.ModelViewSet):
+class ListSubscriptionsViewSet(viewsets.ModelViewSet):
     serializer_class = SubscriptionsSerializer
     pagination_class = LimitPagination
 
@@ -16,7 +16,7 @@ class ListSubscriptions(viewsets.ModelViewSet):
         return User.objects.filter(followed__follower=self.request.user)
 
 
-class Subscribe(APIView):
+class SubscribeViewSet(APIView):
     def delete(self, request, id=None):
         follower = request.user
         author = get_object_or_404(
