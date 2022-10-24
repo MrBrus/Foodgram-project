@@ -2,18 +2,17 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import EmailValidator, RegexValidator
 from django.db import models
 
-USER = 'user'
-MODERATOR = 'moderator'
-ADMIN = 'admin'
-
-ROLES = [
-    (USER, USER),
-    (MODERATOR, MODERATOR),
-    (ADMIN, ADMIN),
-]
-
 
 class User(AbstractUser):
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
+
+    ROLES = [
+        (USER, USER),
+        (MODERATOR, MODERATOR),
+        (ADMIN, ADMIN),
+    ]
     REQUIRED_FIELDS = ['email']
     USERNAME_FIELDS = 'email'
     username = models.CharField(
@@ -46,7 +45,6 @@ class User(AbstractUser):
         'Password',
         max_length=100,
         blank=True,
-        default='****'
     )
     role = models.CharField(
         'Role',
@@ -57,15 +55,6 @@ class User(AbstractUser):
     )
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=[
-                    'username',
-                    'email',
-                ],
-                name='unique_user'
-            )
-        ]
         ordering = ('username',)
         verbose_name = 'User'
         verbose_name_plural = 'Users'
@@ -75,15 +64,15 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == ADMIN or self.is_superuser
+        return self.role == User.ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
-        return self.role == MODERATOR
+        return self.role == User.MODERATOR
 
     @property
     def is_user(self):
-        return self.role == USER
+        return self.role == User.USER
 
 
 class Follow(models.Model):
@@ -111,3 +100,6 @@ class Follow(models.Model):
             ],
             name='unique_following'
         )]
+
+    def __str__(self):
+        return f'{self.follower} subscribed on {self.author}'

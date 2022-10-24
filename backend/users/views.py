@@ -3,8 +3,8 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from users.models import User
 
+from .models import User
 from .serializers import SerializerCustomUser, SerializerPassword
 
 
@@ -36,12 +36,8 @@ class ViewSetCustomUser(UserViewSet):
             data=request.data,
             context={'request': request}
         )
-        if serializer.is_valid():
-            user.set_password(serializer.data['new_password'])
-            user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        serializer.is_valid(raise_exception=True)
+        user.set_password(serializer.data['new_password'])
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+

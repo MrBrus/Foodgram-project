@@ -1,7 +1,8 @@
 from django.contrib import admin
 
-from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
-                     ShoppingCart, Tag)
+from .models import (
+    Favorite, Ingredient, IngredientInRecipe, Recipe, ShoppingCart, Tag,
+)
 
 EMPTY_VALUE = '-none-'
 
@@ -13,6 +14,7 @@ class AdminTag(admin.ModelAdmin):
         'name',
         'color',
         'slug',
+        'recipe_count',
     )
     list_editable = (
         'name',
@@ -57,6 +59,8 @@ class AdminIngredientInRecipe(admin.ModelAdmin):
 
 @admin.register(Recipe)
 class AdminRecipe(admin.ModelAdmin):
+    def recipe_count(self):
+        return self.favorite.count()
     list_display = (
         'id',
         'author',

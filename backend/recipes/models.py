@@ -22,14 +22,7 @@ class Tag(models.Model):
         ordering = ('id',)
         verbose_name = 'Tag'
         verbose_name_plural = 'Tags'
-        constraints = [
-            models.UniqueConstraint(
-                fields=[
-                    'slug',
-                ],
-                name='unique_slug',
-            )
-        ]
+
 
     def __str__(self):
         return self.name
@@ -63,8 +56,8 @@ class IngredientInRecipe(models.Model):
         verbose_name='Units',
         validators=(
             MinValueValidator(
-                1,
-                message='Выберете минимум 1 ингредиент.'
+                0,
+                message='Количество ингредиента не может быть равно 0.'
             ),
         )
     )
@@ -135,9 +128,6 @@ class Recipe(models.Model):
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
 
-    def recipe_count(self):
-        return self.favorite.count()
-
     def __str__(self):
         return f'{self.name} from {self.author}'
 
@@ -201,3 +191,6 @@ class ShoppingCart(models.Model):
                 name='unique cart user'
             )
         ]
+
+    def __str__(self):
+        return f'{self.user} - {self.recipe}'

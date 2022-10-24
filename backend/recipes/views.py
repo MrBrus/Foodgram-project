@@ -13,12 +13,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import IngredientFilter, RecipeFilter
-from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
-                     ShoppingCart, Tag)
+from .models import (
+    Favorite, Ingredient, IngredientInRecipe, Recipe, ShoppingCart, Tag
+)
 from .permissions import OwnerOrReadOnly
-from .serializers import (SerializerFavorite, SerializerIngredient,
-                          SerializerRecipe, SerializerRecipeView,
-                          SerializerTag)
+from .serializers import (
+    SerializerFavorite, SerializerIngredient, SerializerRecipe,
+    SerializerRecipeView, SerializerTag
+)
 
 
 def delete(request, id, model):
@@ -96,7 +98,6 @@ class ViewSetIngredient(viewsets.ModelViewSet):
 class ViewSetRecipe(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = SerializerRecipeView
-    # filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     permission_classes = (OwnerOrReadOnly,)
     filterset_class = RecipeFilter
     ordering_fields = ('-pub_date',)
@@ -140,12 +141,25 @@ class ViewSetShoppingCart(APIView):
                 'UTF-8'
             )
         )
+        font_size_title = 24
+        font_size_text = 14
+        pixels_from_top_title = 150
+        pixels_from_down_title = 800
+        pixels_from_left_text = 50
+        pixels_from_bottom_text_str = 700
+        pixels_subtraction = 20
+
         buffer = BytesIO()
+        buffer_seek_count = 0
         pdf = canvas.Canvas(buffer)
-        pdf.setFont(font, 24)
-        pdf.drawString(150, 800, 'Shopping list')
-        pdf.setFont(font, 14)
-        from_bottom = 700
+        pdf.setFont(font, font_size_title)
+        pdf.drawString(
+            pixels_from_top_title,
+            pixels_from_down_title,
+            'Shopping list'
+        )
+        pdf.setFont(font, font_size_text)
+
         ingredients = IngredientInRecipe.objects.filter(
             recipes__shopping_cart__user=request.user).values(
             'ingredient__name',
@@ -156,11 +170,15 @@ class ViewSetShoppingCart(APIView):
                 f"{ingredient['ingredient__name']} - {ingredient['amount']} ''"
                 f"{ingredient['ingredient__measurement_unit']}"
             ])
-            pdf.drawString(50, from_bottom, shopping_cart)
-            from_bottom -= 20
+            pdf.drawString(
+                pixels_from_left_text,
+                pixels_from_bottom_text_str,
+                shopping_cart
+            )
+            pixels_from_bottom_text_str -= pixels_subtraction
         pdf.showPage()
         pdf.save()
-        buffer.seek(0)
+        buffer.seek(buffer_seek_count)
         return FileResponse(
             buffer,
             content_type='application/pdf',

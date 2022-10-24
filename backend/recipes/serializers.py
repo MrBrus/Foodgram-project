@@ -1,10 +1,11 @@
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from users.serializers import SerializerCustomUser
 
-from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
-                     ShoppingCart, Tag)
+from users.serializers import SerializerCustomUser
+from .models import (
+    Favorite, Ingredient, IngredientInRecipe, Recipe, ShoppingCart, Tag,
+)
 
 
 class SerializerTag(serializers.ModelSerializer):
@@ -50,6 +51,7 @@ class SerializerIngredientInRecipe(serializers.ModelSerializer):
 
 
 class SerializerIngredientCreateInRecipe(serializers.Serializer):
+    min_ingredient_amount = 1
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
         required=True
@@ -70,7 +72,7 @@ class SerializerIngredientCreateInRecipe(serializers.Serializer):
         )
 
     def validate_unit(self, value):
-        if value < 1:
+        if value < SerializerIngredientCreateInRecipe.min_ingredient_amount:
             raise serializers.ValidationError(
                 'Check that the ingredients units is more than one'
             )
@@ -199,7 +201,7 @@ class SerializerRecipe(serializers.ModelSerializer):
         for ingredient in ingredients:
             current_ingredient = get_object_or_404(
                 Ingredient.objects.filter(
-                    id=ingredient['id'])[:1]
+                    id=ingredient['id'])
             )
             ing, _ = IngredientInRecipe.objects.get_or_create(
                 ingredient=current_ingredient,
@@ -239,10 +241,9 @@ class SerializerFollowRecipes(serializers.ModelSerializer):
 
     def get_recipes(self, obj):
         limit = self.context['request'].query_params.get('recipes_limit')
+        recipes = obj.recipes.all()
         if limit:
             recipes = obj.recipes.all()[:int(limit)]
-        else:
-            recipes = obj.recipes.all()
         return SerializerRecipeView(
             recipes,
             many=True
