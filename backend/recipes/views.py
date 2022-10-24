@@ -13,14 +13,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import IngredientFilter, RecipeFilter
-from .models import (
-    Favorite, Ingredient, IngredientInRecipe, Recipe, ShoppingCart, Tag
-)
+from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
+                     ShoppingCart, Tag)
 from .permissions import OwnerOrReadOnly
-from .serializers import (
-    FavoriteSerializer, IngredientSerializer, RecipeSerializer,
-    RecipeViewSerializer, TagSerializer
-)
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeSerializer, RecipeViewSerializer,
+                          TagSerializer)
 
 
 def delete(request, id, model):

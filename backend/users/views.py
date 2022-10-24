@@ -40,4 +40,3 @@ class CustomUserViewSet(UserViewSet):
         user.set_password(serializer.data['new_password'])
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
