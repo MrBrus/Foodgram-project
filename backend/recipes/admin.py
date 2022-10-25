@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.models import Group
 
 from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
                      ShoppingCart, Tag)
@@ -13,7 +14,6 @@ class AdminTag(admin.ModelAdmin):
         'name',
         'color',
         'slug',
-        'recipe_count',
     )
     list_editable = (
         'name',
@@ -58,13 +58,12 @@ class AdminIngredientInRecipe(admin.ModelAdmin):
 
 @admin.register(Recipe)
 class AdminRecipe(admin.ModelAdmin):
-    def recipe_count(self):
-        return self.favorite.count()
     list_display = (
         'id',
         'author',
         'name',
         'image',
+        'added_count',
     )
     search_fields = (
         'author__username',
@@ -78,6 +77,10 @@ class AdminRecipe(admin.ModelAdmin):
     )
     empty_value_display = EMPTY_VALUE
 
+    def added_count(self, obj):
+        return obj.favorite.count()
+
 
 admin.site.register(Favorite)
 admin.site.register(ShoppingCart)
+admin.site.unregister(Group)

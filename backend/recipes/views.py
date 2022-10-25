@@ -1,11 +1,12 @@
 from io import BytesIO
 
-from django.db.models import Sum
+from django.db.models import Sum, Exists, OuterRef, BooleanField, Value
 from django.http import FileResponse
+from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -19,60 +20,6 @@ from .permissions import OwnerOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, RecipeViewSerializer,
                           TagSerializer)
-
-
-def delete(request, id, model):
-    user = request.user
-    recipe = get_object_or_404(Recipe, id=id)
-    if not model.objects.filter(
-            user=user,
-            recipe=recipe
-    ).exists():
-        return Response(
-            {
-                'errors': 'Delete is not available.'
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    obj = get_object_or_404(
-        model,
-        user=user,
-        recipe=recipe
-    )
-    obj.delete()
-    return Response(
-        {'errors': 'Successfully delete.'},
-        status=status.HTTP_204_NO_CONTENT,
-    )
-
-
-def post(request, id, model):
-    user = request.user
-    recipe = get_object_or_404(Recipe, id=id)
-    if model.objects.filter(
-            user=user,
-            recipe=recipe
-    ).exists():
-        return Response(
-            {
-                'errors': 'Available right now.'
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    model.objects.get_or_create(
-        user=user,
-        recipe=recipe
-    )
-    serializer = FavoriteSerializer(
-        recipe,
-        context={
-            "request": request
-        }
-    )
-    return Response(
-        serializer.data,
-        status=status.HTTP_201_CREATED
-    )
 
 
 class TagsViewSet(viewsets.ModelViewSet):
@@ -96,12 +43,13 @@ class IngredientViewSet(viewsets.ModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeViewSerializer
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     permission_classes = (OwnerOrReadOnly,)
     filterset_class = RecipeFilter
     ordering_fields = ('-pub_date',)
 
     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH']:
+        if self.request.method in ['POST', 'PATCH', 'DELETE']:
             return RecipeSerializer
         elif self.request.method == 'GET':
             return RecipeViewSerializer
@@ -109,76 +57,109 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def delete(request, id, model):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=id)
+        if not model.objects.filter(
+                user=user,
+                recipe=recipe
+        ).exists():
+            return Response(
+                {
+                    'errors': 'Delete is not available.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        obj = get_object_or_404(
+            model,
+            user=user,
+            recipe=recipe
+        )
+        obj.delete()
+        return Response(
+            {'errors': 'Successfully delete.'},
+            status=status.HTTP_204_NO_CONTENT,
+        )
 
-class FavoriteViewSet(APIView):
-    def delete(self, request, id):
-        return delete(request, id, Favorite)
+    def post(request, id, model):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=id)
+        if model.objects.filter(
+                user=user,
+                recipe=recipe
+        ).exists():
+            return Response(
+                {
+                    'errors': 'Available right now.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        model.objects.get_or_create(
+            user=user,
+            recipe=recipe
+        )
+        serializer = FavoriteSerializer(
+            recipe,
+            context={
+                "request": request
+            }
+        )
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
 
-    def post(self, request, id):
-        return post(request, id, Favorite)
+    # def add_obj(self, model, user, pk):
+    #     if model.objects.filter(user=user, recipe__id=pk).exists():
+    #         return Response({
+    #             'errors': 'Рецепт уже добавлен в список'
+    #         }, status=status.HTTP_400_BAD_REQUEST)
+    #     recipe = get_object_or_404(Recipe, id=pk)
+    #     model.objects.create(user=user, recipe=recipe)
+    #     serializer = RecipeViewSerializer(recipe)
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #
+    # def delete_obj(self, model, user, pk):
+    #     obj = model.objects.filter(user=user, recipe__id=pk)
+    #     if obj.exists():
+    #         obj.delete()
+    #         return Response(status=status.HTTP_204_NO_CONTENT)
+    #     return Response({
+    #         'errors': 'Рецепт уже удален'
+    #     }, status=status.HTTP_400_BAD_REQUEST)
+    #
+    # @action(detail=True, methods=['post', 'delete'],
+    #         permission_classes=[IsAuthenticated])
+    # def favorite(self, request, pk=None):
+    #     if request.method == 'POST':
+    #         return self.add_obj(Favorite, request.user, pk)
+    #     elif request.method == 'DELETE':
+    #         return self.delete_obj(Favorite, request.user, pk)
+    #     return None
+
+    @action(
+        methods=['post', 'delete'],
+        detail=True,
+        permission_classes=(IsAuthenticated,)
+    )
+    def favorite(self, request, id):
+        if request.method == 'POST':
+            return RecipeViewSet.post(request, id, Favorite)
+        elif request.method == 'DELETE':
+            return RecipeViewSet.delete(request, id, Favorite)
+
+
+# class FavoriteViewSet(APIView):
+#     def delete(self, request, id):
+#         return RecipeViewSet.delete(request, id, Favorite)
+
+# def post(self, request, id):
+#     return RecipeViewSet.post(request, id, Favorite)
 
 
 class ShoppingCartViewSet(APIView):
     def delete(self, request, id):
-        return delete(request, id, ShoppingCart)
+        return RecipeViewSet.delete(request, id, ShoppingCart)
 
     def post(self, request, id):
-        return post(request, id, ShoppingCart)
-
-    @action(
-        detail=False,
-        methods=['GET'],
-        permission_classes=[IsAuthenticated],
-    )
-    def create_pdf(self, request):
-        font = 'arial'
-        pdfmetrics.registerFont(
-            TTFont(
-                'arial',
-                'arial.ttf',
-                'UTF-8'
-            )
-        )
-        font_size_title = 24
-        font_size_text = 14
-        pixels_from_top_title = 150
-        pixels_from_down_title = 800
-        pixels_from_left_text = 50
-        pixels_from_bottom_text_str = 700
-        pixels_subtraction = 20
-
-        buffer = BytesIO()
-        buffer_seek_count = 0
-        pdf = canvas.Canvas(buffer)
-        pdf.setFont(font, font_size_title)
-        pdf.drawString(
-            pixels_from_top_title,
-            pixels_from_down_title,
-            'Shopping list'
-        )
-        pdf.setFont(font, font_size_text)
-
-        ingredients = IngredientInRecipe.objects.filter(
-            recipes__shopping_cart__user=request.user).values(
-            'ingredient__name',
-            'ingredient__measurement_unit'
-        ).annotate(amount=Sum('amount'))
-        for ingredient in ingredients:
-            shopping_cart = '\n'.join([
-                f"{ingredient['ingredient__name']} - {ingredient['amount']} ''"
-                f"{ingredient['ingredient__measurement_unit']}"
-            ])
-            pdf.drawString(
-                pixels_from_left_text,
-                pixels_from_bottom_text_str,
-                shopping_cart
-            )
-            pixels_from_bottom_text_str -= pixels_subtraction
-        pdf.showPage()
-        pdf.save()
-        buffer.seek(buffer_seek_count)
-        return FileResponse(
-            buffer,
-            content_type='application/pdf',
-            as_attachment=True,
-        )
+        return RecipeViewSet.post(request, id, ShoppingCart)

@@ -1,3 +1,4 @@
+from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
@@ -127,21 +128,19 @@ class RecipeViewSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, recipe):
         current_user = self.context['request'].user
-        if (
-                current_user.is_authenticated and Favorite.objects.filter(
+        if current_user.is_authenticated and Favorite.objects.filter(
                 recipe=recipe,
                 user=current_user
-                ).exists()):
+        ).exists():
             return True
         return False
 
     def get_is_in_shopping_cart(self, recipe):
         current_user = self.context['request'].user
-        if (
-                current_user.is_authenticated and ShoppingCart.objects.filter(
+        if current_user.is_authenticated and ShoppingCart.objects.filter(
                 recipe=recipe,
                 user=current_user
-                ).exists()):
+        ).exists():
             return True
         return False
 
@@ -195,8 +194,20 @@ class RecipeSerializer(serializers.ModelSerializer):
         ).exists():
             return True
         return False
-
-    def add_ingredients(self, recipe, ingredients):
+    @staticmethod
+    def __add_ingredients(recipe, ingredients):
+        # ingredient_list = []
+        # for ingredient in ingredients:
+        #     current_ingredient = get_object_or_404(
+        #         Ingredient.objects.filter(
+        #             id=ingredient['id'])
+        #     )
+        #     ingredient_list.append(IngredientInRecipe(
+        #         ingredient=current_ingredient,
+        #         amount=ingredient['amount']))
+        #     print(ingredient_list)
+        # IngredientInRecipe.objects.bulk_create(ingredient_list)
+        # return recipe
         for ingredient in ingredients:
             current_ingredient = get_object_or_404(
                 Ingredient.objects.filter(
@@ -214,14 +225,14 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         for tag in tags:
             recipe.tags.add(tag)
-        self.add_ingredients(recipe, ingredients)
+        self.__add_ingredients(recipe, ingredients)
         return recipe
 
     def update(self, recipe, validated_data, ):
         if 'ingredients' in validated_data:
             ingredients = validated_data.pop('ingredients')
             recipe.ingredients.clear()
-            self.add_ingredients(ingredients, recipe)
+            self.__add_ingredients(ingredients, recipe)
         if 'tags' in validated_data:
             tags_data = validated_data.pop('tags')
             recipe.tags.set(tags_data)
@@ -273,3 +284,5 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             ingredient,
             many=True
         ).data
+
+

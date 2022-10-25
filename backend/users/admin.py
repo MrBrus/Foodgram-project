@@ -17,6 +17,7 @@ class UserAdmin(admin.ModelAdmin):
         'email',
     )
     ordering = ('pk',)
+    exclude = ['Группы']
     empty_value_display = EMPTY_VALUE
 
 
