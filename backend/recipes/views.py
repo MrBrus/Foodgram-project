@@ -118,18 +118,3 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk):
         return RecipeViewSet.delete(request, pk, ShoppingCart)
-
-# class FavoriteViewSet(APIView):
-#     def delete(self, request, id):
-#         return RecipeViewSet.delete(request, id, Favorite)
-#
-#     def post(self, request, id):
-#         return RecipeViewSet.post(request, id, Favorite)
-
-
-# class ShoppingCartViewSet(APIView):
-#     def delete(self, request, id):
-#         return RecipeViewSet.delete(request, id, ShoppingCart)
-#
-#     def post(self, request, id):
-#         return RecipeViewSet.post(request, id, ShoppingCart)

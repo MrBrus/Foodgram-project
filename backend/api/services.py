@@ -2,14 +2,13 @@ from io import BytesIO
 
 from django.db.models import Sum
 from django.http import FileResponse
+from recipes.models import IngredientInRecipe
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-
-from recipes.models import IngredientInRecipe
 
 
 class ShoppingListViewSet(APIView):
