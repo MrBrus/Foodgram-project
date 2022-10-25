@@ -1,15 +1,14 @@
 from djoser.views import UserViewSet
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from api.pagination import LimitPagination
-from .models import User, Follow
-from .serializers import (CustomUserSerializer, PasswordSerializer,
-                          SubscriptionsSerializer, FollowingRecipeSerializer)
+from .models import Follow, User
+from .serializers import (
+    CustomUserSerializer, PasswordSerializer, SubscriptionsSerializer
+)
 
 
 class CustomUserViewSet(UserViewSet):
@@ -29,9 +28,11 @@ class CustomUserViewSet(UserViewSet):
         )
         return Response(serializer.data)
 
-    @action(detail=False,
-            methods=['post'],
-            permission_classes=(IsAuthenticated,))
+    @action(
+        detail=False,
+        methods=['POST'],
+        permission_classes=(IsAuthenticated,)
+    )
     def set_password(self, request, pk=None):
         user = self.request.user
         if user.is_anonymous:
@@ -45,71 +46,55 @@ class CustomUserViewSet(UserViewSet):
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-class ListSubscriptionsViewSet(viewsets.ModelViewSet):
-    serializer_class = SubscriptionsSerializer
-    pagination_class = LimitPagination
-
-    def get_queryset(self):
-        return User.objects.filter(followed__follower=self.request.user)
-
-
-
-
-class SubscribeViewSet(APIView):
-    def delete(self, request, id=None):
+    @action(
+        detail=True,
+        methods=['POST', 'DELETE'],
+        permission_classes=[IsAuthenticated]
+    )
+    def subscribe(self, request, id):
+        followed = get_object_or_404(User, id=id)
         follower = request.user
-        author = get_object_or_404(
-            User,
-            id=id,
-        )
-        if follower == author:
-            return Response(
-                {'errors': 'You cant unsubscribe from yourself.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        follow = Follow.objects.filter(
-            follower=follower,
-            author=author,
-        )
-        if follow.exists():
-            follow.delete()
-            return Response(
-                status=status.HTTP_204_NO_CONTENT,
-            )
 
-        return Response(
-            {'errors': 'You are finally unsubscribed.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    def post(self, request, id=None):
-        follower = request.user
-        author = get_object_or_404(User, id=id)
-        if follower == author:
-            return Response(
-                {'errors': 'You cant subscribe yourself.'},
-                status=status.HTTP_400_BAD_REQUEST
+        if request.method == 'POST':
+            subscribed = (
+                Follow.objects.filter(
+                    author=followed,
+                    follower=follower
+                ).exists()
             )
-        if Follow.objects.filter(
+            if subscribed is True:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            Follow.objects.get_or_create(
                 follower=follower,
-                author=author,
-        ).exists():
-            return Response(
-                {'errors': 'You are finally subscribed.'},
-                status=status.HTTP_400_BAD_REQUEST,
+                author=followed
             )
-        Follow.objects.get_or_create(
-            follower=follower,
-            author=author
-        )
+            serializer = SubscriptionsSerializer(
+                context=self.get_serializer_context()
+            )
+            return Response(serializer.to_representation(
+                instance=followed),
+                status=status.HTTP_201_CREATED
+            )
+        if request.method == 'DELETE':
+            Follow.objects.filter(
+                follower=follower, author=followed
+            ).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        detail=True,
+        methods=['GET'],
+        permission_classes=[IsAuthenticated],
+        url_path='subscriptions',
+    )
+    def subscriptions(self, request):
+        user = request.user
+        queryset = User.objects.filter(followed__follower=user)
+        pages = self.paginate_queryset(queryset)
         serializer = SubscriptionsSerializer(
-            author,
-            context={
-                'request': request
-            },
+            pages,
+            many=True,
+            context={'request': request}
         )
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED
-        )
+        return self.get_paginated_response(serializer.data)

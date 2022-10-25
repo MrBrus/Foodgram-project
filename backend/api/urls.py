@@ -1,56 +1,37 @@
-
 from django.urls import include, path
-from recipes.views import (IngredientViewSet, RecipeViewSet,TagsViewSet,
-                           )
-from rest_framework.routers import DefaultRouter, SimpleRouter
-from users.views import CustomUserViewSet, ListSubscriptionsViewSet, \
-    SubscribeViewSet
+from rest_framework.routers import DefaultRouter
+
+from recipes.views import IngredientViewSet, RecipeViewSet, TagsViewSet
+from users.views import CustomUserViewSet
 from .services import ShoppingListViewSet
 
-# router = DefaultRouter()
-# router.register('users', CustomUserViewSet, basename='users')
-# router.register('tags', TagsViewSet)
-# router.register('ingredients', IngredientViewSet)
-# router.register('recipes', RecipeViewSet)
-
-# urlpatterns = [
-#     path('', include(router.urls)),
-# ]
 app_name = 'api'
-router = SimpleRouter()
-router_2 = DefaultRouter()
+
+router = DefaultRouter()
 router.register('users', CustomUserViewSet, basename='users')
 router.register('tags', TagsViewSet, basename='tags')
 router.register('ingredients', IngredientViewSet, basename='ingredients')
 router.register('recipes', RecipeViewSet, basename='recipes')
-router_2.register('', ListSubscriptionsViewSet, basename='subscriptions')
 
+subscriptions = CustomUserViewSet.as_view({'get': 'subscriptions',
+                                           'delete': 'subscribe',
+                                           'post': 'subscribe', })
 
 urlpatterns = [
-
-    # path(
-    #     'recipes/<int:id>/favorite/',
-    #     FavoriteViewSet.as_view(),
-    #     name='favorite',
-    # ),
+    path(
+        'users/subscriptions/',
+        subscriptions,
+        name='subscriptions'),
     path(
         'recipes/download_shopping_cart/',
         ShoppingListViewSet.as_view(),
         name='download_shopping_cart',
     ),
-    # path(
-    #     'recipes/<int:id>/shopping_cart/',
-    #     ShoppingCartViewSet.as_view(),
-    #     name='shopping_cart',
-    # ),
-    path(
-        'users/subscriptions/',
-        include(router_2.urls)
-    ),
     path(
         'users/<int:id>/subscribe/',
-        SubscribeViewSet.as_view(),
-        name="subscribe"),
+        subscriptions,
+        name='subscriptions'
+    ),
     path(
         'auth/',
         include('djoser.urls.authtoken')

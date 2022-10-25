@@ -69,10 +69,6 @@ class PasswordSerializer(serializers.ModelSerializer):
         )
 
 
-
-
-
-
 class FollowingRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
@@ -92,8 +88,8 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'email',
             'id',
+            'email',
             'username',
             'first_name',
             'last_name',
@@ -102,8 +98,18 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
             'recipes_count',
         )
 
+    def validate(self, data):
+        author = data['followed']
+        follower = data['follower']
+        if follower == author:
+            raise serializers.ValidationError('You can`t follow for yourself!')
+        if Follow.objects.filter(author=author, follower=follower).exists():
+            raise serializers.ValidationError('You have already subscribed!')
+        return data
+
     def get_recipes(self, author):
-        recipes = author.recipes.all()[:3]
+        limit_recipes_show = 3
+        recipes = author.recipes.all()[:limit_recipes_show]
         return FollowingRecipeSerializer(
             recipes,
             many=True

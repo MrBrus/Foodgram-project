@@ -1,11 +1,11 @@
-from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from users.serializers import CustomUserSerializer
 
-from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
-                     ShoppingCart, Tag)
+from users.serializers import CustomUserSerializer
+from .models import (
+    Favorite, Ingredient, IngredientInRecipe, Recipe, ShoppingCart, Tag
+)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -194,6 +194,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         ).exists():
             return True
         return False
+
     @staticmethod
     def __add_ingredients(recipe, ingredients):
         # ingredient_list = []
@@ -284,5 +285,3 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             ingredient,
             many=True
         ).data
-
-
