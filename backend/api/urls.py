@@ -1,16 +1,17 @@
-from api.views import ListSubscriptionsViewSet, SubscribeViewSet
+
 from django.urls import include, path
 from recipes.views import (IngredientViewSet, RecipeViewSet,TagsViewSet,
-                           ShoppingCartViewSet)
+                           )
 from rest_framework.routers import DefaultRouter, SimpleRouter
-from users.views import CustomUserViewSet
+from users.views import CustomUserViewSet, ListSubscriptionsViewSet, \
+    SubscribeViewSet
 from .services import ShoppingListViewSet
 
-router = DefaultRouter()
-router.register('users', CustomUserViewSet, basename='users')
-router.register('tags', TagsViewSet)
-router.register('ingredients', IngredientViewSet)
-router.register('recipes', RecipeViewSet)
+# router = DefaultRouter()
+# router.register('users', CustomUserViewSet, basename='users')
+# router.register('tags', TagsViewSet)
+# router.register('ingredients', IngredientViewSet)
+# router.register('recipes', RecipeViewSet)
 
 # urlpatterns = [
 #     path('', include(router.urls)),
@@ -27,22 +28,21 @@ router_2.register('', ListSubscriptionsViewSet, basename='subscriptions')
 
 urlpatterns = [
 
-    path(
-        'recipes/<int:id>/favorite/',
-        RecipeViewSet.as_view(({'POST': 'favorite',
-                                'DELETE': 'favorite'})),
-        name='favorite',
-    ),
+    # path(
+    #     'recipes/<int:id>/favorite/',
+    #     FavoriteViewSet.as_view(),
+    #     name='favorite',
+    # ),
     path(
         'recipes/download_shopping_cart/',
         ShoppingListViewSet.as_view(),
         name='download_shopping_cart',
     ),
-    path(
-        'recipes/<int:id>/shopping_cart/',
-        ShoppingCartViewSet.as_view(),
-        name='shopping_cart',
-    ),
+    # path(
+    #     'recipes/<int:id>/shopping_cart/',
+    #     ShoppingCartViewSet.as_view(),
+    #     name='shopping_cart',
+    # ),
     path(
         'users/subscriptions/',
         include(router_2.urls)

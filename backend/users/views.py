@@ -54,6 +54,8 @@ class ListSubscriptionsViewSet(viewsets.ModelViewSet):
         return User.objects.filter(followed__follower=self.request.user)
 
 
+
+
 class SubscribeViewSet(APIView):
     def delete(self, request, id=None):
         follower = request.user

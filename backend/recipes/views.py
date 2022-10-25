@@ -1,11 +1,4 @@
-from io import BytesIO
-
-from django.db.models import Sum, Exists, OuterRef, BooleanField, Value
-from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
 from rest_framework import status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -109,57 +102,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    # def add_obj(self, model, user, pk):
-    #     if model.objects.filter(user=user, recipe__id=pk).exists():
-    #         return Response({
-    #             'errors': 'Рецепт уже добавлен в список'
-    #         }, status=status.HTTP_400_BAD_REQUEST)
-    #     recipe = get_object_or_404(Recipe, id=pk)
-    #     model.objects.create(user=user, recipe=recipe)
-    #     serializer = RecipeViewSerializer(recipe)
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #
-    # def delete_obj(self, model, user, pk):
-    #     obj = model.objects.filter(user=user, recipe__id=pk)
-    #     if obj.exists():
-    #         obj.delete()
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
-    #     return Response({
-    #         'errors': 'Рецепт уже удален'
-    #     }, status=status.HTTP_400_BAD_REQUEST)
-    #
-    # @action(detail=True, methods=['post', 'delete'],
-    #         permission_classes=[IsAuthenticated])
-    # def favorite(self, request, pk=None):
-    #     if request.method == 'POST':
-    #         return self.add_obj(Favorite, request.user, pk)
-    #     elif request.method == 'DELETE':
-    #         return self.delete_obj(Favorite, request.user, pk)
-    #     return None
+    @action(detail=True,
+            methods=['post'])
+    def favorite(self, request, pk):
+        return RecipeViewSet.post(request, pk, Favorite)
 
-    @action(
-        methods=['post', 'delete'],
-        detail=True,
-        permission_classes=(IsAuthenticated,)
-    )
-    def favorite(self, request, id):
-        if request.method == 'POST':
-            return RecipeViewSet.post(request, id, Favorite)
-        elif request.method == 'DELETE':
-            return RecipeViewSet.delete(request, id, Favorite)
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk):
+        return RecipeViewSet.delete(request, pk, Favorite)
 
+    @action(detail=True,
+            methods=['post'])
+    def shopping_cart(self, request, pk):
+        return RecipeViewSet.post(request, pk, ShoppingCart)
+
+    @shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, pk):
+        return RecipeViewSet.delete(request, pk, ShoppingCart)
 
 # class FavoriteViewSet(APIView):
 #     def delete(self, request, id):
 #         return RecipeViewSet.delete(request, id, Favorite)
+#
+#     def post(self, request, id):
+#         return RecipeViewSet.post(request, id, Favorite)
 
-# def post(self, request, id):
-#     return RecipeViewSet.post(request, id, Favorite)
 
-
-class ShoppingCartViewSet(APIView):
-    def delete(self, request, id):
-        return RecipeViewSet.delete(request, id, ShoppingCart)
-
-    def post(self, request, id):
-        return RecipeViewSet.post(request, id, ShoppingCart)
+# class ShoppingCartViewSet(APIView):
+#     def delete(self, request, id):
+#         return RecipeViewSet.delete(request, id, ShoppingCart)
+#
+#     def post(self, request, id):
+#         return RecipeViewSet.post(request, id, ShoppingCart)
