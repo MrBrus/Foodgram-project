@@ -55,8 +55,8 @@ class IngredientInRecipe(models.Model):
         verbose_name='Units',
         validators=(
             MinValueValidator(
-                0,
-                message='Количество ингредиента не может быть равно 0.'
+                0.1,
+                message='Minimal ingredients amount is 0,1.'
             ),
         )
     )

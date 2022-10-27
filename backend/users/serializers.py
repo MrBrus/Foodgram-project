@@ -1,8 +1,8 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from recipes.models import Recipe
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
+from recipes.models import Recipe
 from .models import Follow, User
 
 
@@ -45,12 +45,10 @@ class CustomUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, author):
         user = self.context['request'].user.id
-        if Follow.objects.filter(
-                author=author,
-                follower=user
-        ).exists():
-            return True
-        return False
+        return Follow.objects.filter(
+            follower=user,
+            author=author
+        ).exists()
 
 
 class PasswordSerializer(serializers.ModelSerializer):
@@ -116,13 +114,11 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         ).data
 
     def get_is_subscribed(self, author):
-        current_user = self.context['request'].user.id
-        if Follow.objects.filter(
-                author=author,
-                follower=current_user
-        ).exists():
-            return True
-        return False
+        user = self.context['request'].user.id
+        return Follow.objects.filter(
+            follower=user,
+            author=author
+        ).exists()
 
     def get_recipes_count(self, author):
         return author.recipes.count()

@@ -12,6 +12,7 @@ from .serializers import (
     FavoriteSerializer, IngredientSerializer, RecipeSerializer,
     RecipeViewSerializer, TagSerializer
 )
+from recipes.services import get_pdf
 
 
 class TagsViewSet(viewsets.ModelViewSet):
@@ -41,7 +42,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     ordering_fields = ('-pub_date',)
 
     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH', 'DELETE']:
+        if self.request.method in {'POST', 'PATCH', 'DELETE'}:
             return RecipeSerializer
         elif self.request.method == 'GET':
             return RecipeViewSerializer
@@ -49,19 +50,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def delete(request, id, model):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=id)
-        if not model.objects.filter(
-                user=user,
-                recipe=recipe
-        ).exists():
-            return Response(
-                {
-                    'errors': 'Delete is not available.'
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    def delete_fav_or_shoplist(self, model, user, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
         obj = get_object_or_404(
             model,
             user=user,
@@ -73,28 +63,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             status=status.HTTP_204_NO_CONTENT,
         )
 
-    def post(request, id, model):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=id)
-        if model.objects.filter(
-                user=user,
-                recipe=recipe
-        ).exists():
-            return Response(
-                {
-                    'errors': 'Available right now.'
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    def post_fav_or_shoplist(self, model, user, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
         model.objects.get_or_create(
             user=user,
             recipe=recipe
         )
         serializer = FavoriteSerializer(
             recipe,
-            context={
-                "request": request
-            }
+            context=self.get_serializer_context()
         )
         return Response(
             serializer.data,
@@ -104,17 +81,28 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True,
             methods=['post'])
     def favorite(self, request, pk):
-        return RecipeViewSet.post(request, pk, Favorite)
+        user = request.user
+        return self.post_fav_or_shoplist(Favorite, user, pk)
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk):
-        return RecipeViewSet.delete(request, pk, Favorite)
+        user = request.user
+        return self.delete_fav_or_shoplist(Favorite, user, pk)
 
     @action(detail=True,
             methods=['post'])
     def shopping_cart(self, request, pk):
-        return RecipeViewSet.post(request, pk, ShoppingCart)
+        user = request.user
+        return self.post_fav_or_shoplist(ShoppingCart, user, pk)
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk):
-        return RecipeViewSet.delete(request, pk, ShoppingCart)
+        user = request.user
+        return self.delete_fav_or_shoplist(ShoppingCart, user, pk)
+
+    @action(
+        detail=False,
+        methods=['GET'],
+    )
+    def download_shopping_cart(self, request):
+        return get_pdf(request)

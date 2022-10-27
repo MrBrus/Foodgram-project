@@ -1,12 +1,13 @@
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from users.serializers import CustomUserSerializer
 
+from users.serializers import CustomUserSerializer
 from .models import (
     Favorite, Ingredient, IngredientInRecipe, Recipe, ShoppingCart, Tag
 )
 
+min_ingr_amount = 0.1
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,7 +52,7 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
 
 
 class IngredientCreateInRecipeSerializer(serializers.Serializer):
-    min_ingredient_amount = 1
+
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
         required=True
@@ -72,9 +73,9 @@ class IngredientCreateInRecipeSerializer(serializers.Serializer):
         )
 
     def validate_unit(self, value):
-        if value < IngredientCreateInRecipeSerializer.min_ingredient_amount:
+        if value < min_ingr_amount:
             raise serializers.ValidationError(
-                'Check that the ingredients units is more than one'
+                'Check that the ingredients units is more than 0,1.'
             )
         return value
 
@@ -179,61 +180,58 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, recipe):
         current_user = self.context['request'].user
-        if Favorite.objects.filter(
+        return Favorite.objects.filter(
                 recipe=recipe,
                 user=current_user
-        ).exists():
-            return True
-        return False
+        ).exists()
 
     def get_is_in_shopping_cart(self, recipe):
         current_user = self.context['request'].user
-        if ShoppingCart.objects.filter(
+        return ShoppingCart.objects.filter(
                 recipe=recipe,
                 user=current_user
-        ).exists():
-            return True
-        return False
+        ).exists()
 
     @staticmethod
-    def __add_ingredients(recipe, ingredients):
-        # ingredient_list = []
-        # for ingredient in ingredients:
-        #     current_ingredient = get_object_or_404(
-        #         Ingredient.objects.filter(
-        #             id=ingredient['id'])
-        #     )
-        #     ingredient_list.append(IngredientInRecipe(
-        #         ingredient=current_ingredient,
-        #         amount=ingredient['amount']))
-        #     print(ingredient_list)
-        # IngredientInRecipe.objects.bulk_create(ingredient_list)
-        # return recipe
+    def __add_ingredients_in_recipe(ingredients):
+        ingredient_list = []
         for ingredient in ingredients:
             current_ingredient = get_object_or_404(
                 Ingredient.objects.filter(
                     id=ingredient['id'])
             )
-            ing, _ = IngredientInRecipe.objects.get_or_create(
+            ingredient_list.append(IngredientInRecipe(
                 ingredient=current_ingredient,
-                amount=ingredient['amount'],
-            )
-            recipe.ingredients.add(ing.id)
+                amount=ingredient['amount']))
+            print(ingredient_list)
+        return IngredientInRecipe.objects.bulk_create(ingredient_list)
+        # return recipe
+        # for ingredient in ingredients:
+        #     current_ingredient = get_object_or_404(
+        #         Ingredient.objects.filter(
+        #             id=ingredient['id'])
+        #     )
+        #     ing, _ = IngredientInRecipe.objects.get_or_create(
+        #         ingredient=current_ingredient,
+        #         amount=ingredient['amount'],
+        #     )
+        #     recipe.ingredients.add(ing.id)
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
+        print(ingredients)
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         for tag in tags:
             recipe.tags.add(tag)
-        self.__add_ingredients(recipe, ingredients)
+        self.__add_ingredients_in_recipe(ingredients)
         return recipe
 
     def update(self, recipe, validated_data, ):
         if 'ingredients' in validated_data:
             ingredients = validated_data.pop('ingredients')
             recipe.ingredients.clear()
-            self.__add_ingredients(ingredients, recipe)
+            self.__add_ingredients_in_recipe(ingredients, recipe)
         if 'tags' in validated_data:
             tags_data = validated_data.pop('tags')
             recipe.tags.set(tags_data)
@@ -254,7 +252,7 @@ class FollowRecipesSerializer(serializers.ModelSerializer):
         limit = self.context['request'].query_params.get('recipes_limit')
         recipes = obj.recipes.all()
         if limit:
-            recipes = obj.recipes.all()[:int(limit)]
+            recipes = recipes[:int(limit)]
         return RecipeViewSerializer(
             recipes,
             many=True
@@ -271,6 +269,18 @@ class FavoriteSerializer(serializers.ModelSerializer):
             'cooking_time',
         )
 
+    def validate(self, data):
+        user = data['user']
+        recipe = data['recipe']
+        if Favorite.objects.objects.filter(
+                user=user,
+                recipe=recipe
+        ).exists():
+            raise serializers.ValidationError(
+                'You can`t do that with favorite.'
+            )
+        return data
+
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     ingredient = serializers.SerializerMethodField()
@@ -278,6 +288,18 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('ingredient',)
+
+    def validate(self, data):
+        user = data['user']
+        recipe = data['recipe']
+        if ShoppingCart.objects.filter(
+                user=user,
+                recipe=recipe
+        ).exists():
+            raise serializers.ValidationError(
+                'You can`t do that with shopping list.'
+            )
+        return data
 
     def get_ingredient(self, recipe):
         ingredient = recipe.ingredients.all()

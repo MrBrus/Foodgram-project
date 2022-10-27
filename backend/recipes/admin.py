@@ -64,7 +64,7 @@ class AdminRecipe(admin.ModelAdmin):
         'author',
         'name',
         'image',
-        'added_count',
+        'added_recipes_count',
     )
     search_fields = (
         'author__username',
@@ -78,8 +78,10 @@ class AdminRecipe(admin.ModelAdmin):
     )
     empty_value_display = EMPTY_VALUE
 
-    def added_count(self, obj):
+    def added_recipes_count(self, obj):
         return obj.favorite.count()
+    added_recipes_count.short_description = ("Count of users, who added "
+                                             "recipe in favorited")
 
 
 admin.site.register(Favorite)
