@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 
 from .models import (
-    Favorite, Ingredient, IngredientInRecipe, Recipe, ShoppingCart, Tag
+    Favorite, Ingredient, RecipeIngredient, Recipe, ShoppingCart, Tag
 )
 
 EMPTY_VALUE = '-none-'
@@ -44,8 +44,8 @@ class AdminIngredient(admin.ModelAdmin):
     empty_value_display = EMPTY_VALUE
 
 
-@admin.register(IngredientInRecipe)
-class AdminIngredientInRecipe(admin.ModelAdmin):
+@admin.register(RecipeIngredient)
+class AdminRecipeIngredient(admin.ModelAdmin):
     list_display = (
         'id',
         'ingredient',
@@ -57,6 +57,17 @@ class AdminIngredientInRecipe(admin.ModelAdmin):
     )
 
 
+class IngredientRecipeInline(admin.TabularInline):
+    """
+    Вспомогательный класс, чтобы в классе RecipeAdmin можно было настроивать
+    ингредиенты.
+    """
+
+    model = RecipeIngredient
+    min_num = 1
+    extra = 1
+
+
 @admin.register(Recipe)
 class AdminRecipe(admin.ModelAdmin):
     list_display = (
@@ -66,6 +77,7 @@ class AdminRecipe(admin.ModelAdmin):
         'image',
         'added_recipes_count',
     )
+    inlines = (IngredientRecipeInline,)
     search_fields = (
         'author__username',
         'name',
@@ -80,8 +92,9 @@ class AdminRecipe(admin.ModelAdmin):
 
     def added_recipes_count(self, obj):
         return obj.favorite.count()
-    added_recipes_count.short_description = ("Count of users, who added "
-                                             "recipe in favorited")
+
+    added_recipes_count.short_description = (
+        'Count of users, who added recipe in favorited')
 
 
 admin.site.register(Favorite)

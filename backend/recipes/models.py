@@ -45,30 +45,6 @@ class Ingredient(models.Model):
         return f'{self.name}, {self.measurement_unit}'
 
 
-class IngredientInRecipe(models.Model):
-    ingredient = models.ForeignKey(
-        Ingredient,
-        on_delete=models.CASCADE,
-        related_name='ingredient_recipe'
-    )
-    amount = models.PositiveSmallIntegerField(
-        verbose_name='Units',
-        validators=(
-            MinValueValidator(
-                0.1,
-                message='Minimal ingredients amount is 0,1.'
-            ),
-        )
-    )
-
-    class Meta:
-        verbose_name = 'Ingredient amount'
-        verbose_name_plural = 'Ingredients amount'
-
-    def __str__(self):
-        return f' {self.ingredient} - {self.amount}'
-
-
 class Recipe(models.Model):
     author = models.ForeignKey(
         User,
@@ -101,10 +77,11 @@ class Recipe(models.Model):
         help_text='Please, use exist tags.',
     )
     ingredients = models.ManyToManyField(
-        IngredientInRecipe,
+        Ingredient,
         related_name='recipes',
         verbose_name='list of ingredients',
         help_text='Ingredient list',
+        through='RecipeIngredient'
 
     )
     text = models.TextField(
@@ -123,6 +100,34 @@ class Recipe(models.Model):
 
     def __str__(self):
         return f'{self.name} from {self.author}'
+
+
+class RecipeIngredient(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='ingredient_recipe'
+    )
+    amount = models.PositiveSmallIntegerField(
+        verbose_name='Units',
+        validators=(
+            MinValueValidator(
+                0.1,
+                message='Minimal ingredients amount is 0,1.'
+            ),
+        )
+    )
+
+    class Meta:
+        verbose_name = 'Ingredient amount'
+        verbose_name_plural = 'Ingredients amount'
+
+    def __str__(self):
+        return f' {self.ingredient} - {self.amount}'
 
 
 class Favorite(models.Model):

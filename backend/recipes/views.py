@@ -6,7 +6,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
-from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag, \
+    RecipeIngredient
 from .permissions import OwnerOrReadOnly
 from .serializers import (
     FavoriteSerializer, IngredientSerializer, RecipeSerializer,
@@ -42,7 +43,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     ordering_fields = ('-pub_date',)
 
     def get_serializer_class(self):
-        if self.request.method in {'POST', 'PATCH', 'DELETE'}:
+        if self.request.method in ('POST', 'PATCH', 'DELETE'):
             return RecipeSerializer
         elif self.request.method == 'GET':
             return RecipeViewSerializer
@@ -105,4 +106,4 @@ class RecipeViewSet(viewsets.ModelViewSet):
         methods=['GET'],
     )
     def download_shopping_cart(self, request):
-        return get_pdf(request)
+        return get_pdf(request, RecipeIngredient)

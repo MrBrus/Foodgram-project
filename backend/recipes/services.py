@@ -6,10 +6,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
-from .models import IngredientInRecipe
 
-
-def get_pdf(request):
+def get_pdf(request, model):
     """Получение файла PDF."""
     font = 'arial'
     pdfmetrics.registerFont(
@@ -38,8 +36,9 @@ def get_pdf(request):
     )
     pdf.setFont(font, font_size_text)
 
-    ingredients = IngredientInRecipe.objects.filter(
-        recipes__shopping_cart__user=request.user).values(
+    user = request.user
+    ingredients = model.objects.filter(
+        recipe__shopping_cart__user=user).values(
         'ingredient__name',
         'ingredient__measurement_unit'
     ).annotate(amount=Sum('amount'))
