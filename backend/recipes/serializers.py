@@ -1,9 +1,15 @@
-from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
+from drf_extra_fields.fields import Base64ImageField
 from users.serializers import CustomUserSerializer
+
 from .models import (
-    Favorite, Ingredient, RecipeIngredient, Recipe, ShoppingCart, Tag
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag
 )
 
 MIN_INGR_AMOUNT = 0.1

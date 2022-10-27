@@ -2,7 +2,12 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 
 from .models import (
-    Favorite, Ingredient, RecipeIngredient, Recipe, ShoppingCart, Tag
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag
 )
 
 EMPTY_VALUE = '-none-'

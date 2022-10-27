@@ -1,19 +1,29 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from django_filters.rest_framework import DjangoFilterBackend
+from recipes.services import get_pdf
+
 from .filters import IngredientFilter, RecipeFilter
-from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag, \
-    RecipeIngredient
+from .models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag
+)
 from .permissions import OwnerOrReadOnly
 from .serializers import (
-    FavoriteSerializer, IngredientSerializer, RecipeSerializer,
-    RecipeViewSerializer, TagSerializer
+    FavoriteSerializer,
+    IngredientSerializer,
+    RecipeSerializer,
+    RecipeViewSerializer,
+    TagSerializer
 )
-from recipes.services import get_pdf
 
 
 class TagsViewSet(viewsets.ModelViewSet):
