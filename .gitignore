@@ -106,7 +106,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+backend/foodgram/.env
 .venv
 env/
 venv/
