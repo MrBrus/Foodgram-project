@@ -212,7 +212,6 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         ingredients = validated_data.pop('recipeingredient_set')
-        print(ingredients)
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         for tag in tags:
@@ -221,13 +220,13 @@ class RecipeSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, recipe, validated_data, ):
-        if 'ingredients' in validated_data:
-            ingredients = validated_data.pop('recipeingredient_set')
-            recipe.ingredients.clear()
-            self.__add_ingredients_in_recipe(ingredients, recipe)
+        recipe.tags.clear()
+        RecipeIngredient.objects.filter(recipe=recipe).delete()
         if 'tags' in validated_data:
             tags_data = validated_data.pop('tags')
             recipe.tags.set(tags_data)
+        self.__add_ingredients_in_recipe(
+            validated_data.pop('recipeingredient_set'), recipe)
         return super().update(recipe, validated_data)
 
     def to_representation(self, recipe):
