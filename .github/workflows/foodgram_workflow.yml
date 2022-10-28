@@ -58,6 +58,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}
+            sudo systemctl stop nginx
             sudo docker-compose stop
             sudo docker-compose rm backend
             touch .env
