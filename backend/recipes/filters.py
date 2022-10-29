@@ -4,7 +4,7 @@ from rest_framework.filters import SearchFilter
 
 from django_filters import rest_framework as filters
 
-from .models import Recipe, Tag
+from .models import Recipe, Tag, Ingredient
 
 User = get_user_model()
 
@@ -42,4 +42,9 @@ class RecipeFilter(filters.FilterSet):
 
 
 class IngredientFilter(SearchFilter):
-    search_param = 'name'
+    class IngredientSearchFilter(filters.FilterSet):
+        name = filters.CharFilter(lookup_expr='istartswith')
+
+        class Meta:
+            model = Ingredient
+            fields = ('name',)

@@ -22,16 +22,19 @@ class User(AbstractUser):
         unique=True,
         blank=False,
         null=False,
+        help_text='Enter your username'
     )
     first_name = models.CharField(
         'Name',
         max_length=150,
-        blank=True
+        blank=True,
+        help_text='Enter your name. It will show up under your recipes.'
     )
     last_name = models.CharField(
         'Surname',
         max_length=150,
-        blank=True
+        blank=True,
+        help_text='Enter your lastname. It will show up under your recipes.'
     )
     email = models.EmailField(
         'Email',
@@ -40,18 +43,21 @@ class User(AbstractUser):
         unique=True,
         blank=False,
         null=False,
+        help_text='Enter your email address.'
     )
     password = models.TextField(
         'Password',
         max_length=100,
         blank=True,
+        help_text='Your password must be larger than 8 symbols.'
     )
     role = models.CharField(
         'Role',
         choices=ROLES,
         max_length=50,
         default=USER,
-        blank=True
+        blank=True,
+        help_text="Change the user's role."
     )
 
     class Meta:
