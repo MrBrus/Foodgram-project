@@ -115,4 +115,5 @@ class RecipeViewSet(viewsets.ModelViewSet):
         methods=['GET'],
     )
     def download_shopping_cart(self, request):
-        return get_pdf(request, RecipeIngredient)
+        user = request.user
+        return get_pdf(user, RecipeIngredient)

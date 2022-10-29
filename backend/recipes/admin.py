@@ -99,7 +99,8 @@ class AdminRecipe(admin.ModelAdmin):
         return obj.favorite.count()
 
     added_recipes_count.short_description = (
-        'Count of users, who added recipe in favorited')
+        'Count of users, who added recipe in favorited.'
+    )
 
 
 admin.site.register(Favorite)
