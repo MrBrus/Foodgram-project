@@ -2,11 +2,11 @@ from io import BytesIO
 
 from django.db.models import Sum
 from django.http import FileResponse
-
-from recipes.models import RecipeIngredient
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
+
+from recipes.models import RecipeIngredient
 
 
 def get_pdf(user):
