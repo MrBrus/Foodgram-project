@@ -1,21 +1,13 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from django_filters.rest_framework import DjangoFilterBackend
 from recipes.services import get_pdf
-
 from .filters import IngredientFilter, RecipeFilter
-from .models import (
-    Favorite,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    ShoppingCart,
-    Tag
-)
+from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import OwnerOrReadOnly
 from .serializers import (
     FavoriteSerializer,
@@ -38,7 +30,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
-    filter = IngredientFilter
+    filter_backends = (IngredientFilter,)
     search_fields = ('^name',)
     pagination_class = None
     http_method_names = ['get']
@@ -116,4 +108,4 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         user = request.user
-        return get_pdf(user, RecipeIngredient)
+        return get_pdf(user)

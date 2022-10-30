@@ -3,12 +3,13 @@ from io import BytesIO
 from django.db.models import Sum
 from django.http import FileResponse
 
+from recipes.models import RecipeIngredient
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 
-def get_pdf(user, model):
+def get_pdf(user):
     """Получение файла PDF."""
     font = 'arial'
     pdfmetrics.registerFont(
@@ -38,7 +39,7 @@ def get_pdf(user, model):
     pdf.setFont(font, font_size_text)
 
     user = user
-    ingredients = model.objects.filter(
+    ingredients = RecipeIngredient.objects.filter(
         recipe__shopping_cart__user=user).values(
         'ingredient__name',
         'ingredient__measurement_unit'
